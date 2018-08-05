@@ -6,4 +6,4 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-interface MessageRepository : ReactiveMongoRepository<Message, UUID>
+interface MessageRepository : ReactiveMongoRepository<Message, String>

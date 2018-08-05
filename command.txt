@@ -1,1 +1,0 @@
-curl -i -H Content-Type: application/octet-stream -H Accept: application/octet-stream -X POST -d {"id":"message_1","text":"This is message 1"} localhost:8080/messages
