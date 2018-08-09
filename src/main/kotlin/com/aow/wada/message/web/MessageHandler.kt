@@ -30,7 +30,7 @@ class MessageHandler @Autowired constructor(
     fun createMessage(request: ServerRequest): Mono<ServerResponse> {
         return request.bodyToMono<Message>().flatMap { message ->
             messageRepository.save(message).flatMap { created ->
-                ServerResponse.created(URI.create("${request.path()}/${created.id}")).build() //todo
+                ServerResponse.created(URI.create("${request.uri()}${created.id}")).build()
             }
         }
     }
