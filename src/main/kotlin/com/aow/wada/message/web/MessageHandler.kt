@@ -3,35 +3,58 @@ package com.aow.wada.message.web
 import com.aow.wada.message.model.Message
 import com.aow.wada.message.repository.MessageRepository
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.MediaType
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.ServerResponse.ok
+import org.springframework.web.reactive.function.server.ServerResponse.created
+import org.springframework.web.reactive.function.server.ServerResponse.noContent
+import org.springframework.web.reactive.function.server.ServerResponse.notFound
+import org.springframework.web.reactive.function.server.body
 import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toMono
 import java.net.URI
+import java.util.*
+
 
 @Component
 class MessageHandler @Autowired constructor(
         private val messageRepository: MessageRepository
 ) {
     fun listMessages(request: ServerRequest): Mono<ServerResponse> {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
+        return ok()
+                .contentType(APPLICATION_JSON)
                 .body(messageRepository.findAll(), Message::class.java)
     }
 
     fun getMessage(request: ServerRequest): Mono<ServerResponse> {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(messageRepository.findById(request.pathVariable("id")), Message::class.java)
+        return messageRepository.findById(request.pathVariable("id")).flatMap { message ->
+            ok().contentType(APPLICATION_JSON).body(BodyInserters.fromObject(message))
+        }
+                .switchIfEmpty(notFound().build())
     }
 
     fun createMessage(request: ServerRequest): Mono<ServerResponse> {
         return request.bodyToMono<Message>().flatMap { message ->
+            message.id = UUID.randomUUID().toString()
             messageRepository.save(message).flatMap { created ->
-                ServerResponse.created(URI.create("${request.uri()}${created.id}")).build()
+                created(URI.create("${request.uri()}${created.id}")).build()
             }
         }
+    }
+
+    fun updateMessage(request: ServerRequest): Mono<ServerResponse> {
+        return noContent().build()
+    }
+
+    fun deleteMessage(request: ServerRequest): Mono<ServerResponse> {
+        return messageRepository.findById(request.pathVariable("id")).flatMap { message ->
+            noContent().build(messageRepository.deleteById(message.id))
+        }
+                .switchIfEmpty(notFound().build())
     }
 }

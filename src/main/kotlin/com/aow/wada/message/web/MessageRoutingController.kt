@@ -14,6 +14,8 @@ class MessageRoutingController {
             GET("/", messageHandler::listMessages)
             GET("/{id}", messageHandler::getMessage)
             POST("/", messageHandler::createMessage)
+            PUT("/{id}", messageHandler::updateMessage)
+            DELETE("/{id}", messageHandler::deleteMessage)
         }
     }
 }
