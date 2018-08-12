@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document
 @Document(collection = "messages")
 data class Message(val text: String, val location: Map<String, Double>) {
     @Id var id: String = "NO_ID"
+    var point: Point = Point(0.0, 0.0)
 
     fun locationToPoint(): Point {
         val latitude = location["latitude"] ?: 0.0

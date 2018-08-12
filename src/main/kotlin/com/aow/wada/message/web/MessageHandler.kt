@@ -2,11 +2,16 @@ package com.aow.wada.message.web
 
 import com.aow.wada.message.model.Message
 import com.aow.wada.message.repository.MessageRepository
+import com.mongodb.client.model.Indexes
+import org.bson.BSON
+import org.bson.BSONObject
+import org.bson.conversions.Bson
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.geo.Distance
 import org.springframework.data.geo.Metrics.KILOMETERS
 import org.springframework.data.geo.Point
+import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.BodyInserters
@@ -21,7 +26,8 @@ import java.util.*
 
 @Component
 class MessageHandler @Autowired constructor(
-        private val messageRepository: MessageRepository
+        private val messageRepository: MessageRepository,
+        private val mongoTemplate: MongoTemplate
 ) {
     fun listMessages(request: ServerRequest): Mono<ServerResponse> {
         return ok()
@@ -30,14 +36,13 @@ class MessageHandler @Autowired constructor(
     }
 
     fun getMessagesNearLocationWithMaxDistance(request: ServerRequest): Mono<ServerResponse> {
-        return noContent().build()
-//        val location = getPointFromPathVars(request)
-//        val distance = getDistanceFromPathVar(request)
-//        return ok()
-//                .contentType(APPLICATION_JSON)
-//                .body(BodyInserters.fromPublisher(
-//                        messageRepository.findByLocationNear(location, distance),
-//                        Message::class.java))
+        val location = getPointFromPathVars(request)
+        val distance = getDistanceFromPathVar(request)
+        return ok()
+                .contentType(APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(
+                        messageRepository.findByPointNear(location, distance),
+                        Message::class.java))
     }
 
     fun getMessagesNearMessageWithMaxDistance(request: ServerRequest): Mono<ServerResponse> {
@@ -64,6 +69,7 @@ class MessageHandler @Autowired constructor(
         return request.bodyToMono<Message>().flatMap { message ->
             val id = UUID.randomUUID().toString()
             message.id = id
+            message.point = message.locationToPoint()
             messageRepository.save(message).flatMap { created ->
                 created(URI.create("${request.uri()}${created.id}")).build()
             }
@@ -82,7 +88,7 @@ class MessageHandler @Autowired constructor(
     }
 
     fun getPointFromPathVars(request: ServerRequest): Point {
-        return Point(request.pathVariable("lat").toDouble(), request.pathVariable("lon").toDouble())
+        return Point(request.pathVariable("lon").toDouble(), request.pathVariable("lat").toDouble())
     }
 
     fun getDistanceFromPathVar(request: ServerRequest): Distance {

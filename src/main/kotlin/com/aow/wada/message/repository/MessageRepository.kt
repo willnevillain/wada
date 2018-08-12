@@ -9,5 +9,5 @@ import reactor.core.publisher.Flux
 
 @Repository
 interface MessageRepository : ReactiveMongoRepository<Message, String> {
-    fun findByLocationNear(location: Point, distance: Distance): Flux<Message>
+    fun findByPointNear(location: Point, distance: Distance): Flux<Message>
 }
