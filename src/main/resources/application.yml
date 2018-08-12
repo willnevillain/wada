@@ -1,2 +1,2 @@
 #Configuration info here: https://bit.ly/2OeCgpl
-#spring.data.mongodb.uri=mongodb://localhost:27017/demo
+spring.data.mongodb.uri=mongodb://localhost:27017
