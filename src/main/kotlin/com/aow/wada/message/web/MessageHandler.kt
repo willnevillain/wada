@@ -2,21 +2,19 @@ package com.aow.wada.message.web
 
 import com.aow.wada.message.model.Message
 import com.aow.wada.message.repository.MessageRepository
+
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.ParameterizedTypeReference
+import org.springframework.data.geo.Distance
+import org.springframework.data.geo.Metrics.KILOMETERS
+import org.springframework.data.geo.Point
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
-import org.springframework.web.reactive.function.server.ServerResponse.ok
-import org.springframework.web.reactive.function.server.ServerResponse.created
-import org.springframework.web.reactive.function.server.ServerResponse.noContent
-import org.springframework.web.reactive.function.server.ServerResponse.notFound
-import org.springframework.web.reactive.function.server.body
+import org.springframework.web.reactive.function.server.ServerResponse.*
 import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toMono
 import java.net.URI
 import java.util.*
 
@@ -31,6 +29,30 @@ class MessageHandler @Autowired constructor(
                 .body(messageRepository.findAll(), Message::class.java)
     }
 
+    fun getMessagesNearLocationWithMaxDistance(request: ServerRequest): Mono<ServerResponse> {
+        return noContent().build()
+//        val location = getPointFromPathVars(request)
+//        val distance = getDistanceFromPathVar(request)
+//        return ok()
+//                .contentType(APPLICATION_JSON)
+//                .body(BodyInserters.fromPublisher(
+//                        messageRepository.findByLocationNear(location, distance),
+//                        Message::class.java))
+    }
+
+    fun getMessagesNearMessageWithMaxDistance(request: ServerRequest): Mono<ServerResponse> {
+        return noContent().build()
+//        val distance = getDistanceFromPathVar(request)
+//        return messageRepository.findById(request.pathVariable("id")).flatMap { message ->
+//            ok()
+//                    .contentType(APPLICATION_JSON)
+//                    .body(BodyInserters.fromPublisher(
+//                            messageRepository.findByLocationNear(message.locationToPoint(), distance),
+//                            Message::class.java))
+//        }
+//                .switchIfEmpty(notFound().build())
+    }
+
     fun getMessage(request: ServerRequest): Mono<ServerResponse> {
         return messageRepository.findById(request.pathVariable("id")).flatMap { message ->
             ok().contentType(APPLICATION_JSON).body(BodyInserters.fromObject(message))
@@ -40,7 +62,8 @@ class MessageHandler @Autowired constructor(
 
     fun createMessage(request: ServerRequest): Mono<ServerResponse> {
         return request.bodyToMono<Message>().flatMap { message ->
-            message.id = UUID.randomUUID().toString()
+            val id = UUID.randomUUID().toString()
+            message.id = id
             messageRepository.save(message).flatMap { created ->
                 created(URI.create("${request.uri()}${created.id}")).build()
             }
@@ -56,5 +79,13 @@ class MessageHandler @Autowired constructor(
             noContent().build(messageRepository.deleteById(message.id))
         }
                 .switchIfEmpty(notFound().build())
+    }
+
+    fun getPointFromPathVars(request: ServerRequest): Point {
+        return Point(request.pathVariable("lat").toDouble(), request.pathVariable("lon").toDouble())
+    }
+
+    fun getDistanceFromPathVar(request: ServerRequest): Distance {
+        return Distance(request.pathVariable("distance").toDouble(), KILOMETERS)
     }
 }

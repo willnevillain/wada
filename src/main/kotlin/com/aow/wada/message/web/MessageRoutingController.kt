@@ -13,6 +13,8 @@ class MessageRoutingController {
         "/messages".nest {
             GET("/", messageHandler::listMessages)
             GET("/{id}", messageHandler::getMessage)
+            GET("/{lat}/{lon}/{distance}", messageHandler::getMessagesNearLocationWithMaxDistance)
+            GET("/{id}/{distance}", messageHandler::getMessagesNearMessageWithMaxDistance)
             POST("/", messageHandler::createMessage)
             PUT("/{id}", messageHandler::updateMessage)
             DELETE("/{id}", messageHandler::deleteMessage)
