@@ -1,4 +1,4 @@
-package com.aow.wada.message.model
+package com.aow.wada.relic.model
 
 
 
@@ -7,7 +7,7 @@ import org.springframework.data.geo.Point
 import org.springframework.data.mongodb.core.mapping.Document
 
 @Document(collection = "messages")
-data class Message(val text: String, val location: Map<String, Double>) {
+data class RelicEntity(val text: String, val location: Map<String, Double>) {
     @Id var id: String = "NO_ID"
     var point: Point = Point(0.0, 0.0)
 
